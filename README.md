@@ -250,7 +250,71 @@ print (b_plus(5, 10)) # 15
 print (b_plus('5', 10)) # Use type lnt
 ```
 
-## 1.11 if else and or
+## 1.11 if else and or -> conditions(조건문)
+* Boolean Operations
+    * or == x or y == if x is false, then y, eles x
+    * and== x and y ==if x is false, then x, else y 
+    * not== x not y ==if x is false, then True, else False
+
+* 18세 미만이면 you can't drink 입력, age가 18 이거나 19살이면 you are new to this! , 20 살 초과하거나 25살 미만이면 your are still kind of young, 그 밖에는 enjoy your drink!
+
+```python
+# 18 세 이상면 음주 가능, 18세 이하면 음주 불가능
+def age_check(age):
+    print (f"you are {age}")
+    if age < 18:
+        print ("you can't drink")
+    elif age == 18 or age == 19: 
+        print ('you are new to this!')
+    elif age > 20 and age < 25:
+        print ('your are still kind of young')
+    else:
+        print ('enjoy your drink')
+
+        
+age_check(19) # your are 19 , your are new to this!
+```
+
+## 1.12 for in
+'string, tuple 또는 list와 같이 배열의 요소를 순차적으로 가리킨다. 
+days = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri')
+
+```python
+for day in days:
+    if day is 'Wed':
+        break
+    else:
+        print(day, end=' ') # Mon Tue 
+
+# string도 이론적으로는 배열이다.
+for letter in 'nicolas':
+   print (letter, end=' ') # n i c o l a s
+```
+
+## 1.13  Moduels
+python에는 모듈들을 내장한다.
+print 함수는 어떻게 무한적으로 인자를 받을 수 있을까? => 그 해답은 Django에??
+
+* 기본적으로 모듈을 사용하는 방법
+```python
+import math
+print (math.ceil(1.2)) # 1.2 올림하는 값
+print (math.fabs(1.2)) # abs 
+print (math.fabs(-1.2))
+```
+
+* 모듈에서 특정한 함수만을 가져오기
+```python
+from math import ceil, fsum
+
+print (ceil(1.2))
+print (fsum([1,2,3,4,5,6,7]))
+```
+
+* 모듈의 이름이 마음에 안들 때 내가 원하는 대로 바꾸기!
+```python
+from math import fsum as fm
+```
 
 
 
