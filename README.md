@@ -99,6 +99,166 @@ say_hello()
 
 ## 1.5 Function Arugments
 
+```python
+def printf(who):
+    print ('hello ',who)
+
+printf("Nicolas")  # hello  Nicolas
+printf('deok') # hello deok
+printf('nyeon') # hello nyeon
+printf(type(1234)) # int
+printf(type(True)) # bool
+
+# default value
+def plus(a,b = 0):
+    print (a + b)
+ 
+def minus(a,b):
+    print (a - b)
+
+print(plus(3)) # 3 
+print(plus(5,3)) # 2 
+```
+
+## 1.6 Returns
+Return 과 print의 차이는?  function에서는 Return 되어진 값이 치환이 되어진다.
+reuturn을 하면 출력하고 종료한다.
+```python
+def p_plus(a,b):
+    print (a + b)
+
+def r_plus(a,b):
+    return a + b 
+
+p_result = p_plus(2,3)
+r_result = r_plus(2,3)
+
+print (p_result) # 5 None, return 을 받지 않으면 print는 컴퓨터의 입장에서는 그냥 아무것도 아니기에 None이다.
+print (r_result) # 5
+
+def r_plus(a, b):
+    return a + b
+    print ("osemthtin hrefealalalalalallala", True)
+
+r_result = r_plus(2,4)
+print (r_result) # 6
+```
+
+## 1.8 Keyworded Arguments
+지금까지 사용한건 Positional Arguments(인자)라고 한다. -> 인자인데 위치에 의존하는 것이다.
+하지만, 우리는 가끔 keyworkd argument를 가진다. 이게 뭐냐면? 인자인데 위치에 따라서 정해지는게 아닌 argument의
+이름으로 쌍을 이뤄주는 것이다. 
+
+```python
+def plus(a,b):
+    return a + b
+
+result = plus(b = 30, a = 1)
+print (result) # 31
+```
+
+* def를 정의할때는 name, age, are_from, fav_food 순서대로 작성을 해줘서 , keyworkd 별 arguments를 작성을 하지 않으면 헷갈린다.
+* keywords arguments를 작성하면 age, name, fav_food, are_from 처럼 순서가 달라도 값을 미리 선정을 해주고 기존의 순서에 맞게 출력이 된다.
+```python
+def say_hello(name, age, are_from, fav_food):
+    return f"Hello {name} you are {age} your are from {are_from} you like {fav_food}" 
+
+hello  = say_hello(age='12',name='nico', are_from='daegu', fav_food='pizza')
+print (hello) # Hello nico you are 12 your are from daegu you like pizza
+```
+
+## 1.9 Code Challenge!
+### 7가지 functions을 만드는 challenge
+* plus
+* minus
+* times
+* division
+* negation
+* power
+* reminder
+이 7가지의 함수가 포함되어있는 계산기를 만드는데, 유저가 함수를 호출할 때, 가끔 문자열을 쓴다면 이것의 예외처리도 해보자.
+
+```python
+class Calculator():
+    def set_number(self, a, b):
+        self.a = int(a)
+        self.b = int(b)
+    def plus(self):
+        result = self.a + self.b
+        return result
+    
+    def minus(self):
+        result = self.a - self.b
+        return result
+    
+    def times(self):
+        result = self.a * self.b
+        return result
+    
+    def division(self):
+        result = self.a / self.b
+        return result
+    
+    def negation(self):
+        result = -self.a
+        return result
+    
+    def power(self):
+        result = self.a ** self.b
+        return result
+    
+    def reminder(self):
+        result = self.a % self.b
+        return result
+        
+a = Calculator()
+a.set_number(5, 10)
+print (a.plus()) # 15
+print (a.minus()) # -5 
+print (a.times()) # 50
+print (a.division()) # 0.5
+print (a.negation()) # -5 
+print (a.power()) # 9765625
+print (a.reminder()) # 5
+```
+
+## 1.10 Conditionals part One
+아래와 같은 에러를 해결하기 위해서는 지금은 if-else를 써본다?
+```python
+def plus(a,b):
+   return a + b
+   
+plus(12, '10') # 이러한 문자열의 에러를 해결하기 위해서는??
+```
+
+```python
+def plus(a,b):
+    if (type(a) == str or type(b) == str):
+        return "no string, use int"
+    else: 
+        return a + b
+
+plus(12, '10') # no string, use int => 그런데, 이렇게 하면 다른 유형이 나오면 에러가 발생한다.
+
+def b_plus(a,b):
+    if type(a) is int or type(b) is float:
+        return a + b
+    else:
+        return "Use type int"
+
+print (b_plus(5, 10)) # 15
+print (b_plus('5', 10)) # Use type lnt
+```
+
+## 1.11 if else and or
+
+
+
+
+
+
+
+
 
 
 
