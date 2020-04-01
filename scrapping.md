@@ -5,3 +5,8 @@
 
 ## 2.1 what are We Building
 이번 프로젝트는 나는 파이썬을 개발하기 위한 개발자이고, 가장 유명한 구인구직 사이트 중에 하나인 Indeed라는 곳에서 데이터를 긁어오는 것이다.
+
+## 2.2 Navigating with Python
+1. url 접근
+2. page 갯수 파악
+3. 
