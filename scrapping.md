@@ -48,3 +48,30 @@ print (spans[:-1]) # [<span class="pn">2</span>, <span class="pn">3</span>, <spa
 ```
 
 ## 2.4 Extracting Indeed Pages part Two
+* pagenation 의 max_page를 찾아보기
+
+## 2.5 Requsting Each Page
+* pagenation을 max_page requests하는 방법을 찾아보기
+* last page인 10을 추출하기 위한 함수로 만들어준다 -> extract_indeed_page()
+* last page인 갯수를 받아서 &start=갯수 설정해서 출력하는 함수를 만들어준다. -> extract_indeed_jobs()
+
+
+
+
+
+## 2.6 Extracting Titles
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
