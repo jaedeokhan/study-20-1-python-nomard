@@ -150,7 +150,7 @@ LIMIT = 50
 URL = f"https://kr.indeed.com/jobs?q=python&limit={LIMIT}"
 
 # max page를 추출하는 함수
-def extract_indeed_page():
+def get_last_page():
     result = requests.get(URL)
     soup = BeautifulSoup(result.content, 'html.parser')
     pagenation = soup.find('div', {'class' : 'pagination'})
@@ -178,7 +178,7 @@ def extract_job(html):
     return {'title' : title , 'company' : company, 'location' : location,
             "link": f"https://www.indeed.com/viewjob?jk={job_id}" }
 
-def extract_indeed_jobs_2(last_page):
+def extract_jobs(last_page):
     jobs = []
     for page in range(last_page):
         print (f"Scrapping page {page}")
@@ -190,12 +190,247 @@ def extract_indeed_jobs_2(last_page):
             jobs.append(job)
     return jobs
 
-last_indeed_pages = extract_indeed_page()
+def get_jobs():
+    last_page = get_last_page()
+    jobs = extract_jobs(last_page)
+    return jobs
 
-indeed_jobs = extract_indeed_jobs_2(last_indeed_pages)
-
-print (indeed_jobs)
+get_jobs() # 결과가 다나온다.
+# Scrapping page 0
+# Scrapping page 1
+# Scrapping page 2
+# Scrapping page 3
+# Scrapping page 4
+# Scrapping page 5
+# Scrapping page 6
+# Scrapping page 7
+# Scrapping page 8
+# Scrapping page 9
 ```
+
+## 2.9 StackOverflow Pages
+* 여기서도 함수로  쪼개서 세부적으로 접근한다.
+* get_last_page() 함수를 만들어서, last_page를 얻는다.
+* get_jobs() 함수에는 나중에 list에 데이터를 for문으로 돌려서 받을 것이다.
+```python
+import requests
+from bs4 import BeautifulSoup
+
+URL = f"https://stackoverflow.com/jobs?q=python&sort=i"
+
+def get_last_page():
+    result = requests.get(URL)
+    soup = BeautifulSoup(result.content, 'html.parser')
+    pages = soup.find('div', {'class' : 's-pagination'}).find_all("a")
+    print (pages)
+    
+def get_jobs():
+    last_page = get_last_page()
+    return []
+
+get_jobs() # a태그들이 나온다.
+```
+
+## 2.10 StackOverflow extract_jobs
+* get_last_page() 함수로 마지막 페이지의 숫자를 int형으로 가져온다.
+* extrat_jobs(last_page): last_page 수를 받은만큼 반복문을 수행하고, 원하는 title, company 와 같은 데이터를 추출한다.
+* get_jobs(): 마지막에는 원하는 페이지를 출력하는 방법으로 쓴다.
+```python
+import requests
+from bs4 import BeautifulSoup
+
+URL = f"https://stackoverflow.com/jobs?q=python&sort=i&pg=1"
+
+def get_last_page():
+    result = requests.get(URL)
+    soup = BeautifulSoup(result.content, 'html.parser')
+    pages = soup.find('div', {'class' : 's-pagination'}).find_all('a')
+#     pages = soup.select('a.s-pagination--item span')
+    pages = int(pages[-2].text) # get_text(strip=True) 로도 whitespace 제거가 가능
+    return pages
+
+def extract_jobs(last_page):
+    jobs = []
+#     for page in range(last_page):
+    result = requests.get(f"{URL}&pg={0}") # page + 1
+    soup = BeautifulSoup(result.content, 'html.parser')
+    results = soup.find_all('div', {'class' : '-job'})
+    for item in results:
+        print (item['data-jobid'])
+               
+def get_jobs():
+    last_page = get_last_page()
+    jobs = extract_jobs(last_page)
+    return []
+
+get_jobs()
+```
+
+## 2.11 StackOverflow extract_job
+* get_last_page(): # 마지막 페이지를 얻을 함수
+* extract_job(html): # extract_jobs의 for문 안에서 동작할 함수
+* extract_jobs(last_page): # last_page 수 만틈 request를 돌 함수
+    * list를 unpacked 함수로 company, location 두 개를 span[0], spanp[1]을 각자 받기, recursive를 사용하면 span > span 인 항목 건너 뛰는것이 가능하다.
+* get_jobs(): # 출력하는 함수
+```python
+import requests
+from bs4 import BeautifulSoup
+
+URL = f"https://stackoverflow.com/jobs?q=python&sort=i&pg=1"
+
+def get_last_page():
+    result = requests.get(URL)
+    soup = BeautifulSoup(result.content, 'html.parser')
+    pages = soup.find('div', {'class' : 's-pagination'}).find_all('a')
+#     pages = soup.select('a.s-pagination--item span')
+    pages = int(pages[-2].text) # get_text(strip=True) 로도 whitespace 제거가 가능
+    return pages
+
+def extract_job(html):
+#     title = html.select_one('div.-grid--cell.fl1 h2 a')
+    title = html.find('div', {'class' : 'grid--cell fl1'}).find('h2').find('a')['title']
+    # span 안에 span이 있는 구문이 존재하면 recursive=False로 접근하지 않게 하는 것도 가능하다.
+    # python 의 unpacking value 기능이다.
+    # span의 첫 번째 요소에는 company를 담고, span의 두 번째 요소에는 location을 담는다.
+    company, location = html.find('div', {'class' : 'grid--cell fl1'}).find('h3').find_all('span', recursive=False)
+    company = company.get_text(strip=True)
+    location = location.text.strip()
+    return {'title' : title, 'company' : company, 'location' : location}
+
+def extract_jobs(last_page):
+    jobs = []
+#     for page in range(last_page):
+    result = requests.get(f"{URL}&pg={0}") # page + 1
+    soup = BeautifulSoup(result.content, 'html.parser')
+    results = soup.find_all('div', {'class' : '-job'})
+    for result in results:
+        job = extract_job(result)
+        jobs.append(job)
+    return jobs
+
+def get_jobs():
+    last_page = get_last_page()
+    jobs = extract_jobs(last_page)
+    return jobs
+
+get_jobs()
+```
+
+## 2.12 StackOverflow extract_job part Two
+* extract_job(html): 에서 company, location을 strip() 또는 replace()로 구문 처리해주기
+```python
+import requests
+from bs4 import BeautifulSoup
+
+URL = f"https://stackoverflow.com/jobs?q=python&sort=i&pg=1"
+
+def get_last_page():
+    result = requests.get(URL)
+    soup = BeautifulSoup(result.content, 'html.parser')
+    pages = soup.find('div', {'class' : 's-pagination'}).find_all('a')
+#     pages = soup.select('a.s-pagination--item span')
+    pages = int(pages[-2].text) # get_text(strip=True) 로도 whitespace 제거가 가능
+    return pages
+
+def extract_job(html):
+#     title = html.select_one('div.-grid--cell.fl1 h2 a')
+    title = html.find('div', {'class' : 'grid--cell fl1'}).find('h2').find('a')['title']
+    title = title.replace('-', '')
+    # span 안에 span이 있는 구문이 존재하면 recursive=False로 접근하지 않게 하는 것도 가능하다.
+    # python 의 unpacking value 기능이다.
+    # span의 첫 번째 요소에는 company를 담고, span의 두 번째 요소에는 location을 담는다.
+    company, location = html.find('div', {'class' : 'grid--cell fl1'}).find('h3').find_all('span', recursive=False)
+    company = company.get_text(strip=True) # strip('-') 와 같이 replace와 같은 기능을 한다.
+    location = location.get_text(strip=True).replace(',', '') # 맥에서 \n은 \r 일수도 있음
+    return {'title' : title, 'company' : company, 'location' : location}
+
+def extract_jobs(last_page):
+    jobs = []
+#     for page in range(last_page):
+    result = requests.get(f"{URL}&pg={0}") # page + 1
+    soup = BeautifulSoup(result.content, 'html.parser')
+    results = soup.find_all('div', {'class' : '-job'})
+    for result in results:
+        job = extract_job(result)
+        jobs.append(job)
+
+
+def get_jobs():
+    last_page = get_last_page()
+    jobs = extract_jobs(last_page)
+    return jobs
+
+get_jobs()
+```
+
+## 2.13 StackOverflow Finish
+* job_id 는 extract_jobs(last_page): 함수에 results에 넣어주고, result를 for문에서 extract_job(html)에서 html을 result로 받아서 사용하낟. 그래서 job_id는 html['속성'] 을 가져와서 사용을 하면 된다.
+```python
+import requests
+from bs4 import BeautifulSoup
+
+URL = f"https://stackoverflow.com/jobs?q=python&sort=i&pg="
+
+def get_last_page():
+    result = requests.get(URL)
+    soup = BeautifulSoup(result.content, 'html.parser')
+    pages = soup.find('div', {'class' : 's-pagination'}).find_all('a')
+#     pages = soup.select('a.s-pagination--item span')
+    pages = int(pages[-2].text) # get_text(strip=True) 로도 whitespace 제거가 가능
+    return pages
+
+def extract_job(html):
+#     title = html.select_one('div.-grid--cell.fl1 h2 a')
+    title = html.find('div', {'class' : 'grid--cell fl1'}).find('h2').find('a')['title']
+    title = title.replace('-', '')
+    # span 안에 span이 있는 구문이 존재하면 recursive=False로 접근하지 않게 하는 것도 가능하다.
+    # python 의 unpacking value 기능이다.
+    # span의 첫 번째 요소에는 company를 담고, span의 두 번째 요소에는 location을 담는다.
+    company, location = html.find('div', {'class' : 'grid--cell fl1'}).find('h3').find_all('span', recursive=False)
+    company = company.get_text(strip=True) # strip('-') 와 같이 replace와 같은 기능을 한다.
+    location = location.get_text(strip=True).replace(',', '') # 맥에서 \n은 \r 일수도 있음
+    job_id = html['data-result-id']
+    return {'title' : title, 'company' : company, 'location' : location,
+           'link' : f'https://stackoverflow.com/jobs/{job_id}'}
+
+def extract_jobs(last_page):
+    jobs = []
+    for page in range(last_page):
+        if page == 8:
+            break
+        print (f'scrappying page number {page + 1}')
+        result = requests.get(f"{URL}{page + 1}") # page + 1
+        soup = BeautifulSoup(result.content, 'html.parser')
+        results = soup.find_all('div', {'class' : '-job'})
+        for result in results:
+            job = extract_job(result)
+            jobs.append(job)
+    return jobs
+
+def get_jobs():
+    last_page = get_last_page()
+    jobs = extract_jobs(last_page)
+    return jobs
+
+get_jobs()
+```
+
+* indeed page -> indeed.py , stackoverflow page -> stackoverflow.py 로 저장을 하고 모듈화해서 사용하기.
+```python
+# indeed, stackoverflow 의 get_jobs 를 alias를 이용해서 이름을 변경해서 사용한다.
+from indeed import get_jobs as get_indeed_jobs
+from stackoverflow import get_jobs as get_so_jobs
+
+so_jobs = get_so_jobs()
+indeed_jobs = get_indeed_jobs()
+jobs = so_jobs + indeed_jobs # 둘의 출력을 합치고 이제 csv로 저장을 할 준비를 한다.
+print (jobs)
+```
+
+
+
+
+
 
 
 
