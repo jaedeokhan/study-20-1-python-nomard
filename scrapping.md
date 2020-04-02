@@ -416,6 +416,112 @@ get_jobs()
 ```
 
 * indeed page -> indeed.py , stackoverflow page -> stackoverflow.py 로 저장을 하고 모듈화해서 사용하기.
+> indeed.py
+```python
+import requests
+from bs4 import BeautifulSoup
+
+LIMIT = 50
+URL = f"https://kr.indeed.com/jobs?q=python&limit={LIMIT}"
+
+# max page를 추출하는 함수
+def get_last_page():
+    result = requests.get(URL)
+    soup = BeautifulSoup(result.content, 'html.parser')
+    pagenation = soup.find('div', {'class' : 'pagination'})
+    links = pagenation.find_all('a')
+    
+    pages = []
+    for link in links[:-1]:
+        pages.append(int(link.text))
+        
+    max_page = pages[-1]
+    return max_page
+
+def extract_job(html):
+    title = html.find('div', {'class' : 'title'}).find("a")['title']
+    company = html.find("span", 'company')
+    company_anchor = company.find('a')
+    location = html.find('div', {'class' : 'location'})
+    if company.find('a') is not None:
+        company = (str(company_anchor.string))
+    else:
+        company = (str(company.string))
+    company = company.strip()
+    location = html.find('div', {'class' : 'recJobLoc'})['data-rc-loc']
+    job_id = html['data-jk']
+    return {'title' : title , 'company' : company, 'location' : location,
+            "link": f"https://www.indeed.com/viewjob?jk={job_id}" }
+
+def extract_jobs(last_page):
+    jobs = []
+    for page in range(last_page):
+        print (f"Indeed scrappying page number {page + 1}")
+        result = requests.get(f"{URL}&start={page* LIMIT}")
+        soup = BeautifulSoup(result.content, 'html.parser')
+        results = soup.find_all('div', {'class' : 'jobsearch-SerpJobCard'})
+        for result in results:
+            job = extract_job(result)
+            jobs.append(job)
+    return jobs
+
+def get_jobs():
+    last_page = get_last_page()
+    jobs = extract_jobs(last_page)
+    return jobs
+```
+
+> stackoverflow.py
+```python
+import requests
+from bs4 import BeautifulSoup
+
+URL = f"https://stackoverflow.com/jobs?q=python&sort=i&pg="
+
+def get_last_page():
+    result = requests.get(URL)
+    soup = BeautifulSoup(result.content, 'html.parser')
+    pages = soup.find('div', {'class' : 's-pagination'}).find_all('a')
+#     pages = soup.select('a.s-pagination--item span')
+    pages = int(pages[-2].text) # get_text(strip=True) 로도 whitespace 제거가 가능
+    return pages
+
+def extract_job(html):
+#     title = html.select_one('div.-grid--cell.fl1 h2 a')
+    title = html.find('div', {'class' : 'grid--cell fl1'}).find('h2').find('a')['title']
+    title = title.replace('-', '')
+    # span 안에 span이 있는 구문이 존재하면 recursive=False로 접근하지 않게 하는 것도 가능하다.
+    # python 의 unpacking value 기능이다.
+    # span의 첫 번째 요소에는 company를 담고, span의 두 번째 요소에는 location을 담는다.
+    company, location = html.find('div', {'class' : 'grid--cell fl1'}).find('h3').find_all('span', recursive=False)
+    company = company.get_text(strip=True) # strip('-') 와 같이 replace와 같은 기능을 한다.
+    location = location.get_text(strip=True).replace(',', '') # 맥에서 \n은 \r 일수도 있음
+    job_id = html['data-result-id']
+    return {'title' : title, 'company' : company, 'location' : location,
+           'link' : f'https://stackoverflow.com/jobs/{job_id}'}
+
+def extract_jobs(last_page):
+    jobs = []
+    for page in range(last_page):
+        if page == 8:
+            break
+        print (f'Stackoverflow scrappying page number {page + 1}')
+        result = requests.get(f"{URL}{page + 1}") # page + 1
+        soup = BeautifulSoup(result.content, 'html.parser')
+        results = soup.find_all('div', {'class' : '-job'})
+        for result in results:
+            job = extract_job(result)
+            jobs.append(job)
+    return jobs
+
+def get_jobs():
+    last_page = get_last_page()
+    jobs = extract_jobs(last_page)
+    return jobs
+
+```
+
+> indeed.py, stackoverflow.py 를 사용하는 방법
 ```python
 # indeed, stackoverflow 의 get_jobs 를 alias를 이용해서 이름을 변경해서 사용한다.
 from indeed import get_jobs as get_indeed_jobs
@@ -427,10 +533,50 @@ jobs = so_jobs + indeed_jobs # 둘의 출력을 합치고 이제 csv로 저장�
 print (jobs)
 ```
 
+## 2.14 What is CSV
+* python csv(Comma Seperated Value)를 사용해서 저장하기
 
+## 2.15 Saving to CSV
+* save.py 를 만들어서 모듈화해서 실행시키기
 
+> save.py
+```python
+import csv 
 
+def save_to_file(jobs):
+    file = open("jobs.csv", mode="w")
+    writer = csv.writer(file)
+    writer.writerow(["title", "company", "location", "link"], encoding='utf-8')
+    for job in jobs:
+        writer.writerow(list(job.values()))
+    return 
+```
 
+> 실행하는 파일
+```python
+from indeed import get_jobs as get_indeed_jobs
+from stackoverflow import get_jobs as get_so_jobs
+from save import save_to_file
+
+so_jobs = get_so_jobs()
+indeed_jobs = get_indeed_jobs()
+jobs =  so_jobs + indeed_jobs
+save_to_file(jobs)
+```
+
+## 2.16. OMG THIS IS AWESOME
+* save.py 를 사용해서 파일을 저장해서 -> 구글클라우드 sheet에서 사용해보기
+* Windows 환경에서 csv를 사용하면 개행이 일어난다. 그래서 인코딩 설정 옆에 newline='' 을 추가하기.
+```python
+import csv 
+
+def save_to_file(jobs):
+    file = open("jobs.csv", mode="w", encoding='utf-8', newline='')
+    writer = csv.writer(file)
+    writer.writerow(["title", "company", "location", "link"])
+    for job in jobs:
+        writer.writerow(list(job.values()))
+```
 
 
 
