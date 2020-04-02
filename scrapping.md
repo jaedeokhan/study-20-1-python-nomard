@@ -142,7 +142,60 @@ extract_indeed_jobs_2(last_indeed_pages)
     * extract_job(html) 함수로, 인자로 result를 받아서, extract_indeed_job_2 의 for문에 작성해주기.
     * extract_indeed_jobs_2(last_page), 첫 번째 max_page 를 뽑아주는 함수에게 last_page를 받고, for문에서는 extract_job(html) 에 result를 넣어주고, 데이터를 jobs라는 []리스트에 담아주기
     
+```python
+import requests
+from bs4 import BeautifulSoup
 
+LIMIT = 50
+URL = f"https://kr.indeed.com/jobs?q=python&limit={LIMIT}"
+
+# max page를 추출하는 함수
+def extract_indeed_page():
+    result = requests.get(URL)
+    soup = BeautifulSoup(result.content, 'html.parser')
+    pagenation = soup.find('div', {'class' : 'pagination'})
+    links = pagenation.find_all('a')
+    
+    pages = []
+    for link in links[:-1]:
+        pages.append(int(link.text))
+        
+    max_page = pages[-1]
+    return max_page
+
+def extract_job(html):
+    title = html.find('div', {'class' : 'title'}).find("a")['title']
+    company = html.find("span", 'company')
+    company_anchor = company.find('a')
+    location = html.find('div', {'class' : 'location'})
+    if company.find('a') is not None:
+        company = (str(company_anchor.string))
+    else:
+        company = (str(company.string))
+    company = company.strip()
+    location = html.find('div', {'class' : 'recJobLoc'})['data-rc-loc']
+    job_id = html['data-jk']
+    return {'title' : title , 'company' : company, 'location' : location,
+            "link": f"https://www.indeed.com/viewjob?jk={job_id}" }
+
+def extract_indeed_jobs_2(last_page):
+    jobs = []
+    for page in range(last_page):
+        print (f"Scrapping page {page}")
+        result = requests.get(f"{URL}&start={page* LIMIT}")
+        soup = BeautifulSoup(result.content, 'html.parser')
+        results = soup.find_all('div', {'class' : 'jobsearch-SerpJobCard'})
+        for result in results:
+            job = extract_job(result)
+            jobs.append(job)
+    return jobs
+
+last_indeed_pages = extract_indeed_page()
+
+indeed_jobs = extract_indeed_jobs_2(last_indeed_pages)
+
+print (indeed_jobs)
+```
 
 
 
