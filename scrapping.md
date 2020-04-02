@@ -137,7 +137,11 @@ extract_indeed_jobs_2(last_indeed_pages)
 ```
 
 ## 2.8 Extracting Locations and Finishing up
-
+* 정리
+    * extract_indeed_page() 함수로, max_page 즉 last_page를 가져오는 함수를 만들고,
+    * extract_job(html) 함수로, 인자로 result를 받아서, extract_indeed_job_2 의 for문에 작성해주기.
+    * extract_indeed_jobs_2(last_page), 첫 번째 max_page 를 뽑아주는 함수에게 last_page를 받고, for문에서는 extract_job(html) 에 result를 넣어주고, 데이터를 jobs라는 []리스트에 담아주기
+    
 
 
 
