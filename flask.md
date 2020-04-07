@@ -341,7 +341,7 @@ def report():
 app.run(host="127.0.0.1")
 ```
 
-## 4.7
+## 4.7 Export Route
 * 사용자가 이것을 csv파일로 저장을 가능하게 만들기
     * csv로 export&저장하는 기능 생성하기
 * 새로운 route를 하나 만들어서 try-exception으로 raise Exception을 발생시키기
@@ -402,7 +402,89 @@ def export():
 app.run(host="127.0.0.1")
 ```
 
+## 4.8 File Download
+* def save_to_file() 함수가 있는 페이지를 exported.py로 저장해서 모듈로 불러와서 사용하기
+    * 문제점은 flask의 모듈인 send_file()이 Windows에서는 다운로드가 잘 안된다.
+> exported.py
+```python
+import csv 
 
+def save_to_file(jobs):
+    file = open("jobs.csv", mode="w", encoding='utf-8', newline='')
+    writer = csv.writer(file)
+    writer.writerow(["title", "company", "location", "link"])
+    for job in jobs:
+        writer.writerow(list(job.values()))
+    return 
+```
+
+> flask
+```python
+from flask import Flask, render_template, request, redirect, send_file
+from scrapper import get_jobs
+from exporter import save_to_file
+
+app = Flask("SuperScrapper")
+
+# FAKE DB
+db = {}
+
+@app.route("/")
+def home():
+    return render_template("potato.html")
+# @는 decorate , 요 놈은 바로 밑에 함수를 찾기 때문에 무조건 함수로 작성을 해준다.
+# /<username> 으로 동적 URL을 구성이 가능하다.
+# @app.route("/<username>")
+# def potato(username):
+#     return f"Hello your name is {username} how are you doing"
+
+@app.route("/report")
+def report():
+    word = request.args.get('word')
+    if word:
+        word = word.lower()
+        existingJobs = db.get(word)
+        if existingJobs:
+            jobs = existingJobs
+        else:
+            jobs = get_jobs(word)
+            db[word]= jobs
+    else:
+        return redirect('/')
+    return render_template("report.html", 
+                          searchingBy=word,
+                          resultsNumber=len(jobs),
+                          jobs=jobs)
+
+@app.route("/export")
+def export():
+    try:
+        word = request.args.get('word')
+        if not word:
+            raise Exception()
+        word = word.lower()
+        jobs = db.get(word)
+        if not jobs:
+            raise Exception()
+        save_to_file(jobs)
+        return  send_file("jobs.csv",   # 여기서 send_file이 안먹히는지 페이지해서 다운로드하면 .csv파일로 불러들여와지지 않는다.
+                          mimetype='text/json',
+                          attachment_filename=f"{word}.csv",
+                          as_attachment=True)
+    except:
+        return redirect('/')
+    
+    
+app.run(host="127.0.0.1")
+
+
+```
+
+## 4.9 Recap
+* instance search 기능을 이용해서 검색을 마구하는 방법
+복습
+
+## 4.10 Conclusions
 
 
 
